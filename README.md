@@ -4,7 +4,7 @@ Since I spend so much time lately on Twitter thinking about the country's degred
 
 ## How does it work?
 Here's the rough plan:
-![alt text](https://github.com/[delaneykranz]/[doomscroller]/blob/[main]/docs/tentative-plan.jpg?raw=true)
+![alt text](https://github.com/delaneykranz/doomscroller/blob/main/docs/tentative-plan.png?raw=true)
 
 When a user makes a new request, it will open up a websocket in API Gateway. 
 
