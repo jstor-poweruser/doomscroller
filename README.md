@@ -1,0 +1,2 @@
+## "Doomscroller"
+Since I spend so much time lately on Twitter thinking about the country's degredation of democracy, I thought it might be helpful to my misery to create an application that weeds out any Tweets in my feed that have any amount of optimism in them. To do this, I want to harness AWS serverless architecture, the Twitter Developer API, and infrastructure-as-code deployments through AWS SAM. 
