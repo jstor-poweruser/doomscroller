@@ -31,17 +31,30 @@ Resources:
   QueueConsumerTweetPollerFunction:
     Type: AWS::Serverless::Function 
     Properties:
-      CodeUri: queue_consumer/src/
+      CodeUri: tweet_processor/src/
       Handler: handler.handler
       Runtime: python3.8
       Timeout: 10
       MemorySize: 128
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Ref DynamoDBTweetStore
+          TWITTER_BEARER_TOKEN: 'AAAAAAAAAAAAAAAAAAAAAMaKNwEAAAAA5X1cohFNfakCSXYiWhO5Nbf%2B244%3DfAv08PXw07JEXvazMBzVOjuU5NBkTwdO0SkvjPzAR9QU3V0lrn'
+          TWITTER_CONSUMER_KEY: 'ezfawlOx6LN83Dox2HNr0oGnx'
+          TWITTER_CONSUMER_SECRET: '2rL2E8Hv0bJe8b1jfFghgUdibmWmPQjysuZwO2PRiuXOEcSzwZ'
+          TWITTER_ACCESS_TOKEN: '1373393402918621187-g2r5xNaU3ZUabHR0gWLY37OZ1XhI29'
+          TWITTER_ACCESS_TOKEN_SECRET: '2RjadQPyPTSzfFeVMXQZl2ZTMTu0tjVNr1huWYuNQx2MI'
       Events:
         MySQSEvent:
           Type: SQS
           Properties:
             Queue: !GetAtt FeedUpdateRequestQueue.Arn
             BatchSize: 10
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoDBTweetStore
+        - ComprehendBasicAccessPolicy: {}
+
 
   DynamoDBTweetReturnFunction:
     Type: 'AWS::Serverless::Function'
@@ -64,10 +77,10 @@ Resources:
     Type: 'AWS::DynamoDB::Table'
     Properties:
       AttributeDefinitions:
-        - AttributeName: id
+        - AttributeName: tweet_id
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: tweet_id
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
