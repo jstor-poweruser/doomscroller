@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Infrastructure for Doomscroller
+
+Globals:
+  Function:
+    Runtime: python3.8
+    MemorySize: 128
+    Timeout: 15
+
+Resources:
+  RequestIssuerFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: request_issuer/src/
+      Handler: handler.handler
+      Runtime: python3.8
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          SQS_URL: !Ref FeedUpdateRequestQueue
+          ENVIRONMENT: 'us-west-2'
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt FeedUpdateRequestQueue.QueueName
+
+  FeedUpdateRequestQueue:
+    Type: AWS::SQS::Queue
+
+  QueueConsumerTweetPollerFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: queue_consumer/src/
+      Handler: handler.handler
+      Runtime: python3.8
+      Timeout: 10
+      MemorySize: 128
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt FeedUpdateRequestQueue.Arn
+            BatchSize: 10
+
+  DynamoDBTweetReturnFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.handler
+      Runtime: python3.8
+      CodeUri: tweet_return/src/
+      Description: An Amazon DynamoDB trigger that logs the updates made to a table.
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        DynamoDBTweetStore:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt DynamoDBTweetStore.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 100
+
+  DynamoDBTweetStore:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
